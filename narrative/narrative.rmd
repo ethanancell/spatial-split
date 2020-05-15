@@ -2,7 +2,7 @@
 title: "Spatial Split"
 author: "Ethan Ancell"
 date: "5/15/2020"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
