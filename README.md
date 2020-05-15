@@ -1,9 +1,11 @@
 # spatial-split package
 
+## Start here
+
+For a complete project narrative, [click here.](narrative/narrative.pdf)
+
 ## Meta
 Author: Ethan Ancell
-
-A narrative for the project can be found [here.](narrative/narrative.html)
 
 This project will attempt to split a spatial region into disjoint subregions where
 a spatial process can be assumed at the smaller scale.
