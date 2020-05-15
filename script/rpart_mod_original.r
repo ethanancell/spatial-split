@@ -1,16 +1,3 @@
-# Helper distance formula
-distance <- function(x1, y1, x2, y2) {
-  sqrt((x2-x1)^2 + (y2-y1)^2)
-}
-
-# Mean square distance
-msd <- function(parms) {
-  long_bar <- mean(parms$long)
-  lat_bar <- mean(parms$lat)
-  distances <- distance(parms$long, parms$lat, long_bar, lat_bar)
-  mean(distances^2)
-}
-
 # INITIALIZATION FUNCTION
 # --------------------
 # Pass in:
@@ -29,16 +16,8 @@ msd <- function(parms) {
 init_mod <- function(y, offset, parms, wt) {
   if (is.matrix(y) && ncol(y) > 1)
     stop("Matrix response not allowed")
-  if (missing(parms))
-    stop("Parameter with lat/long required")
-  if (!missing(wt) && length(wt) > 0) {
-    warning("weights ignored for this method")
-    print(wt)
-  }
-  if (!is.data.frame(parms))
-    stop("parms must be a dataframe")
-  if (dim(parms)[1] != length(y))
-    warning("parms and y are of different lengths. Calcutions may be incorrect.")
+  if (!missing(parms) && length(parms) > 0)
+    warning("parameter argument ignored")
   if (length(offset))
     y <- y - offset
 
@@ -51,28 +30,16 @@ init_mod <- function(y, offset, parms, wt) {
   # Don't keep copy of summary function vars to bog down workspace
   environment(sfun) <- .GlobalEnv
   # Return value
-  list(y = c(y), parms = parms, numresp = 1, numy = 1, summary = sfun)
+  list(y = c(y), parms = NULL, numresp = 1, numy = 1, summary = sfun)
 }
 
-# TODO:
-# Currently, the MSD is calculated by equally weighting the distances to the center with
-# the RSS. You will probably want another parameter in here to control the effect of MSD on
-# the deviance.
 
 # EVALUATION FUNCTION
 # -----------------------
 # Produces deviance and label for the node
 eval_mod <- function(y, wt, parms) {
-  # Base RSS
   wmean <- sum(y*wt)/sum(wt)
   rss <- sum(wt*(y-wmean)^2)
-  # Extra loss parameter based on mean square distance 
-  long_bar <- mean(parms$long)
-  lat_bar <- mean(parms$lat)
-  distances <- distance(parms$long, parms$lat, long_bar, lat_bar)
-  sd_node <- sum(distances^2)
-  
-  # We'll let the deviance be the rss in addition to the penality term
   list(label = wmean, deviance = rss)
 }
 
@@ -88,26 +55,11 @@ eval_mod <- function(y, wt, parms) {
 # goodness - utility of split (larger numbers better)
 # direction - A vector that tells where values should be sent in the tree
 split_mod <- function(y, wt, x, parms, continuous) {
-  
-  
-  # How much should we weight the Euclidean distance metric?
-  lambda <- 1
-  
-  # 1
   # Center y
   n <- length(y)
   y <- y - sum(y*wt)/sum(wt)
-  
-  # Center longitude / latitude (maybe)
 
   if (continuous) {
-    
-    # We need parms to coincide with the ordering of x, so we if we
-    # extract the ordering of x, then we can put parms in the same order
-    long_vec <- parms$long[order(x, method="radix")]
-    lat_vec <- parms$lat[order(x, method="radix")]
-    
-    #2
     # continuous x var
     temp <- cumsum(y*wt)[-n]
     left.wt <- cumsum(wt)[-n]
@@ -115,45 +67,6 @@ split_mod <- function(y, wt, x, parms, continuous) {
     lmean <- temp / left.wt
     rmean <- -temp / right.wt
     goodness <- (left.wt*lmean^2 + right.wt*rmean^2) / sum(wt*y^2)
-    
-    # Add the MSD penalty term to goodness
-    # We will find the root of the mean square distance in the group
-    long_bar <- mean(long_vec)
-    lat_bar <- mean(lat_vec)
-    
-    # Get a vector with the average long/lat at each yi
-    temp_long <- cumsum(long_vec)[-n]
-    temp_lat <- cumsum(lat_vec)[-n]
-    # Find the average long/lat in both the left/right halves
-    # Side note: we'll reuse left.wt and right.wt
-    lmean_long <- temp_long / left.wt
-    lmean_lat <- temp_lat / left.wt
-    
-    temp_long <- rev(cumsum(rev(long_vec[-n])))
-    temp_lat <- rev(cumsum(rev(lat_vec[-n])))
-    rmean_long <- temp_long / right.wt
-    rmean_lat <- temp_lat / right.wt
-    
-    # TODO: Remove this
-    # print("--------")
-    # print(paste("lmean_long: ", lmean_long, sep=''))
-    # print(paste("lmean_lat: ", lmean_lat, sep=''))
-    # print(paste("rmean_long: ", rmean_long, sep=''))
-    # print(paste("rmean_lat: ", rmean_lat, sep=''))
-    
-    # Get both ss and ssb
-    ssb <- (left.wt*distance(long_bar, lat_bar, lmean_long, lmean_lat)^2) + (right.wt*distance(long_bar, lat_bar, rmean_long, rmean_lat)^2)
-    ss <- sum(distance(long_bar, lat_bar, long_vec, lat_vec)^2)
-    
-    # TODO: Remove this output
-    # print("goodness: ")
-    # print(head(goodness))
-    # print("ssb/ss: ")
-    # print(ssb/ss)
-    
-    # Add on to goodness and then return
-    goodness = (1-lambda) * goodness + lambda * (ssb/ss)
-    
     list(goodness = goodness, direction = sign(lmean))
   }
   else {

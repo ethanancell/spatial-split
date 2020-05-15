@@ -6,7 +6,7 @@ library(tidyverse)
 # ---- DATA ----
 # --------------
 
-soil <- read.csv("post_classification.csv")
+soil <- read.csv("analysis/post_classification.csv")
 
 # Convert back to factor
 soil$predictions <- as.factor(soil$predictions)
@@ -56,7 +56,7 @@ view_dist <- function(region, var, bw=0.01, plotnormal=FALSE) {
 }
 
 # Explore class3
-class3explore <- partitioned_data[[6]]
+class3explore <- partitioned_data[[3]]
 coordinates(class3explore) = ~long+lat
 
 # Variogram
