@@ -69,3 +69,25 @@ vgm.fit <- fit.variogram(vgm, model = vgm(1, "Sph", 900, 1))
 # ---------------
 # ---- MODEL ----
 # ---------------
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------
+# --- RANDOM FOREST ---
+# ---------------------
+
+rf_soil <- read.csv(file = "data/output/rf_residuals.csv")
+coordinates(rf_soil) <- ~long+lat
+
+# Variogram
+vgm <- variogram(resid~1, data = rf_soil)
+plot(vgm)
+# Looks also... not super good?

@@ -1,4 +1,9 @@
+library(ggplot2)
+library(maps)
 library(randomForest)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(sf)
 library(tidyverse)
 
 # ------------
@@ -60,3 +65,28 @@ for (i in 1:10) {
 
 cv_resid <- example_soil$sm_8 - cv_predictions
 hist(cv_resid)
+
+# Plot
+plot_data <- cbind(example_soil, cv_predictions, cv_resid)
+
+# World data
+world <- ne_countries(scale = "medium", returnclass = "sf")
+states <- st_as_sf(maps::map("state", plot=FALSE, fill=TRUE))
+
+# Rough boundaries of Utah
+xlimit <- c(-114.44, -108.37)
+ylimit <- c(36.44, 42.19)
+
+ggplot(data = world) +
+  geom_sf() +
+  geom_point(data = plot_data, mapping = aes(x = long, y = lat, color = cv_resid),
+             size = 2, shape = 16) +
+  geom_sf(data = states, fill = NA) +
+  coord_sf(xlim = xlimit, ylim = ylimit, expand = FALSE) +
+  xlab("Longitude") + ylab("Latitude") +
+  ggtitle("RF Residuals")
+
+# ----------------
+# ---- OUTPUT ----
+# ----------------
+write.csv(plot_data, file = "data/output/rf_residuals.csv")
