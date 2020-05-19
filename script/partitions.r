@@ -4,11 +4,12 @@
 
 # Set to true to use the modified loss function in rpart
 # to spatially cluster observations more
-use_modified_anova <- TRUE
-predictors <- c(elev = "Elevation(meter)", wind = "Wind Speed(m/s)",
-                p1day = "Precipitation for 1 day", p2day = "Precipitation for 2 days",
-                p3day = "Precipitation for 3 days", p4day = "Precipitation for 4 days",
-                p5day = "Precipitation for 5 days", long = "Longitude",
+use_modified_anova <- FALSE
+predictors <- c(elev = "Elevation.meter.", wind = "Wind.Speed.m.s.",
+                p1day = "Precipitation.for.1.day", p2day = "Precipitation.for.2.days",
+                p3day = "Precipitation.for.3.days", p4day = "Precipitation.for.4.days",
+                p5day = "Precipitation.for.5.days", slope = "slope_vec",
+                aspect = "aspect_vec", long = "Longitude",
                 lat = "Latitude")
 
 # -----------------
@@ -34,7 +35,8 @@ theme_set(theme_bw())
 # --------------------
 
 # Load the soil measurement stations
-soil_data <- read_csv("data/example_data.csv")
+#soil_data <- read_csv("data/example_data.csv")
+soil_data <- read_csv("data/test_output.csv")
 locations <- soil_data %>%
   select(lat = Latitude, long = Longitude, moisture = sm_8) %>%
   filter(moisture >= 0)

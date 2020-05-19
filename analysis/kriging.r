@@ -19,8 +19,7 @@ soil <- soil %>%
 
 # Add residuals column
 soil <- soil %>%
-  mutate(raw_predictions - sm_8) %>%
-  rename(resid = `raw_predictions - sm_8`)
+  mutate(resid = raw_predictions - sm_8)
 
 # Extract by class
 factor_amount <- length(levels(soil$predictions))
@@ -56,11 +55,14 @@ view_dist <- function(region, var, bw=0.01, plotnormal=FALSE) {
 }
 
 # Explore class3
-class3explore <- partitioned_data[[3]]
+class3explore <- partitioned_data[[7]]
 coordinates(class3explore) = ~long+lat
 
+allclasses <- rbind(partitioned_data[[1:12]])
+coordinates(soil) = ~long+lat
+
 # Variogram
-vgm <- variogram(resid~1, data=class3explore)
+vgm <- variogram(resid~1, data=soil)
 plot(vgm)
 vgm.fit <- fit.variogram(vgm, model = vgm(1, "Sph", 900, 1))
 

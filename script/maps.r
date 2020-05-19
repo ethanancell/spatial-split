@@ -9,10 +9,10 @@ theme_set(theme_bw())
 
 # Country data
 world <- ne_countries(scale = "medium", returnclass = "sf")
-states <- st_as_sf(map("state", plot=FALSE, fill=TRUE))
+states <- st_as_sf(maps::map("state", plot=FALSE, fill=TRUE))
 
 # Load the soil measurement stations
-soil_data <- read_csv("example_data.csv")
+soil_data <- read_csv("data/example_data.csv")
 locations <- soil_data %>%
   select(lat = Latitude, long = Longitude, moisture = sm_8) %>%
   filter(moisture >= 0)
@@ -34,8 +34,8 @@ ylimit <- c(36.44, 42.19)
 # Plot convex hull of all data for a single day
 ggplot(data=world) +
   geom_sf() + 
-  geom_point(data=locations, aes(x=long, y=lat, color=moisture), size=1, shape=16) +
-  geom_polygon(data = polygon_hull, aes(x = long, y = lat), alpha = 1/3, fill = "green") +
+  geom_point(data=locations, aes(x=long, y=lat, color=moisture), size=2, shape=16) +
+  #geom_polygon(data = polygon_hull, aes(x = long, y = lat), alpha = 1/3, fill = "green") +
   geom_sf(data=states, fill=NA) +
   coord_sf(xlim=xlimit, ylim=ylimit, expand=FALSE) +
   xlab("Longitude") + ylab("Latitude") + 
