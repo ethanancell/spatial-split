@@ -1,7 +1,21 @@
+# ----------------------------------------
+# -- GREATER CIRCLE DISTANCE DEFINITION --
+# ----------------------------------------
+
+library(Rcpp)
+library(RcppArmadillo)
+sourceCpp("script/dist_cpp.cpp")
+
+# ------------------------------
+# -- MODIFIED RPART FUNCTIONS --
+# ------------------------------
+
 # Helper distance formula
 distance <- function(x1, y1, x2, y2) {
   #sqrt((x2-x1)^2 + (y2-y1)^2)
-  
+  loc1 <- matrix(data = c(x1, y1), ncol = 2, byrow = TRUE)
+  loc2 <- matrix(data = c(x2, y2), ncol = 2, byrow = TRUE)
+  dist_cpp(loc1, loc2, geographic = TRUE)
 }
 
 # Mean square distance
@@ -91,8 +105,8 @@ eval_mod <- function(y, wt, parms) {
 split_mod <- function(y, wt, x, parms, continuous) {
   
   
-  # How much should we weight the Euclidean distance metric?
-  lambda <- 1
+  # How much should we weight the distance metric?
+  lambda <- 0.25
   
   # 1
   # Center y

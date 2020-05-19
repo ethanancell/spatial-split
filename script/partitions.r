@@ -4,7 +4,7 @@
 
 # Set to true to use the modified loss function in rpart
 # to spatially cluster observations more
-use_modified_anova <- FALSE
+use_modified_anova <- TRUE
 predictors <- c(elev = "Elevation.meter.", wind = "Wind.Speed.m.s.",
                 p1day = "Precipitation.for.1.day", p2day = "Precipitation.for.2.days",
                 p3day = "Precipitation.for.3.days", p4day = "Precipitation.for.4.days",
@@ -71,14 +71,17 @@ if (use_modified_anova) {
 # --------------------
 
 # Number of terminal nodes to classify into (subregions)
-subregions <- 10
+subregions <- 9
+
+# TODO: in the model down here, I have latitude and longitude inside of the model. There is a chance
+# That you might want to take it out...
 
 # Base our model off of the soil_model_df
 if (use_modified_anova) {
   # Get the parameters dataframe with the longitude/latitude of all observations
   parms <- soil_model_df %>%
     select(long, lat)
-  disjoint_model <- rpart(sm_8 ~ . -long -lat, data=soil_model_df, method=anova_mod, parms=parms,cp=0)
+  disjoint_model <- rpart(sm_8 ~ ., data=soil_model_df, method=anova_mod, parms=parms,cp=0)
 } else {
   disjoint_model <- rpart(sm_8 ~ . -long -lat, data=soil_model_df, method="anova", cp=0)
 }
