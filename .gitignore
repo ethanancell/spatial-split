@@ -2,5 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-data
+data/daily
+data/dem
+data/output
+data/prism
+data/soilgrids
 scratch
