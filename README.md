@@ -11,5 +11,4 @@ This project will attempt to split a spatial region into disjoint subregions whe
 a spatial process can be assumed at the smaller scale.
 
 ## Project guide
-All scripts run in this project assume a working directory of the base directory
-of the project.
+When running scripts in R, make sure that the working directory is set to the base directory of this project.
