@@ -5,12 +5,9 @@
 # Set to true to use the modified loss function in rpart
 # to spatially cluster observations more
 use_modified_anova <- TRUE
-predictors <- c(elev = "Elevation.meter.", wind = "Wind.Speed.m.s.",
-                p1day = "Precipitation.for.1.day", p2day = "Precipitation.for.2.days",
-                p3day = "Precipitation.for.3.days", p4day = "Precipitation.for.4.days",
-                p5day = "Precipitation.for.5.days", slope = "slope_vec",
-                aspect = "aspect_vec", long = "Longitude",
-                lat = "Latitude")
+predictors <- c("elev", "lat", "long", "wind_speed", "p1day", "p2day",
+                "p3day", "p4day", "p5day", "slope", "aspect",
+                "avg_month_rain", "avg_month_temp")
 
 # -----------------
 # --- LIBRARIES ---
@@ -35,11 +32,10 @@ theme_set(theme_bw())
 # --------------------
 
 # Load the soil measurement stations
-#soil_data <- read_csv("data/example_data.csv")
-soil_data <- read_csv("data/test_output.csv")
+soil_data <- read_csv("data/average_september_train.csv")
 locations <- soil_data %>%
-  select(lat = Latitude, long = Longitude, moisture = sm_8) %>%
-  filter(moisture >= 0)
+  dplyr::select(lat, long, sm_8) %>%
+  dplyr::filter(sm_8 >= 0)
 
 # We want a dataframe that is "original" but has taken out all the rows
 # that were taken out in the modeling step.
@@ -48,9 +44,9 @@ post_soil_data <- filter(soil_data, sm_8 >= 0)
 # Create dataframe appropriate for modeling
 soil_model_df <- soil_data %>%
   # Select appropriate variables
-  select(sm_8, all_of(predictors)) %>%
+  dplyr::select(sm_8, all_of(predictors)) %>%
   # Take out rows with missing sm_8 (coded as -999999.0)
-  filter(sm_8 >= 0)
+  dplyr::filter(sm_8 >= 0)
 
 
 
@@ -69,9 +65,10 @@ if (use_modified_anova) {
 # --------------------
 # ----- MODELING -----
 # --------------------
-
+# source("script/cluster.r")
 # Number of terminal nodes to classify into (subregions)
-subregions <- 9
+subregions <- 8
+# temp <- cluster(soil_model_df, 'sm_8', 8, "tree_modified")
 
 # TODO: in the model down here, I have latitude and longitude inside of the model. There is a chance
 # That you might want to take it out...
@@ -81,7 +78,7 @@ if (use_modified_anova) {
   # Get the parameters dataframe with the longitude/latitude of all observations
   parms <- soil_model_df %>%
     select(long, lat)
-  disjoint_model <- rpart(sm_8 ~ ., data=soil_model_df, method=anova_mod, parms=parms,cp=0)
+  disjoint_model <- rpart(sm_8 ~ . -elev, data=soil_model_df, method=anova_mod, parms=parms,cp=0)
 } else {
   disjoint_model <- rpart(sm_8 ~ . -long -lat, data=soil_model_df, method="anova", cp=0)
 }
@@ -111,8 +108,8 @@ convex_hulls <- vector("list", factor_amount)
 for (flevel in 1:factor_amount) {
   # First copy down all the locations in that class
   locs[[flevel]] <- soil_model_df %>%
-    select(long, lat) %>%
-    filter(predictions == flevel)
+    dplyr::select(long, lat) %>%
+    dplyr::filter(predictions == flevel)
   # Fill out the convex hull
   convex_hull_index <- chull(as.matrix(locs[[flevel]]))
   convex_hulls[[flevel]] <- locs[[flevel]][convex_hull_index,]
@@ -138,8 +135,9 @@ class_colors <- sample(colors(), subregions, replace = TRUE)
 # Plot soil moisture stations by "disjoint" classification
 classes <- ggplot(data = world) +
   geom_sf() +
-  geom_point(data=soil_model_df, aes(x=long, y=lat, color=predictions), size=2, shape=16)
-# Add on convex polygons
+  geom_point(data=soil_model_df, aes(x=long, y=lat, color=predictions), size=2, shape=16) +
+  coord_sf(xlim=xlimit, ylim=ylimit, expand=FALSE)
+#Add on convex polygons
 for (flevel in 1:factor_amount) {
   classes <- classes + geom_polygon(data=convex_hulls[[flevel]], 
                                     aes(x = long, y = lat),
@@ -154,6 +152,16 @@ classes <- classes +
 
 classes
 
+
+
+# ALTERNATIVE PLOTTING - JUST SM_8
+ggplot(data = world) +
+  geom_sf() +
+  geom_point(data = soil, aes(x = long, y = lat, color = sm_8), size = 2, shape = 16) +
+  geom_sf(data = states, fill = NA) +
+  coord_sf(xlim = xlimit, ylim = ylimit, expand = FALSE) +
+  xlab("Longitude") + ylab("Latitude") +
+  ggtitle("Soil moisture")
 
 
 # --------------------

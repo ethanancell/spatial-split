@@ -120,41 +120,55 @@ split_mod <- function(y, wt, x, parms, continuous) {
     # extract the ordering of x, then we can put parms in the same order
     long_vec <- parms$long[order(x, method="radix")]
     lat_vec <- parms$lat[order(x, method="radix")]
-    locations <- as.data.frame(cbind(long_vec, lat_vec))
     
-    # browser()
-    
-    # Response weighting
+    # continuous x var
     temp <- cumsum(y*wt)[-n]
     left.wt <- cumsum(wt)[-n]
     right.wt <- sum(wt) - left.wt
     lmean <- temp / left.wt
     rmean <- -temp / right.wt
-    p1 <- (left.wt*lmean^2 + right.wt*rmean^2) / sum(wt*y^2)
+    goodness <- (left.wt*lmean^2 + right.wt*rmean^2) / sum(wt*y^2)
     
-    # Distance weighting
-    # Unvectorized for the moment. This will probably take ages to run, so a TODO item will
-    # be to vectorize all of this.
-    g_length <- length(x) - 1
-    p2 <- rep(0, g_length)
-    for (split_loc in 1:g_length) {
-      # Get left half and right half of long/lat
-      left_half <- as.data.frame(locations[1:split_loc, ])
-      right_half <- as.data.frame(locations[(split_loc+1):length(x), ])
-      
-      # browser()
-      
-      # p2 at split_loc will be BSS / TSS
-      TSS <- sum(dist(locations)^2)
-      BSS <- 0
-      for (i in 1:(dim(left_half)[1])) {
-        BSS <- BSS + sum((dist(rbind(left_half[i, ], right_half))^2)[1:dim(right_half)[1]])
-      }
-      p2[split_loc] <- (BSS / TSS)
-    }
+    # Add the MSD penalty term to goodness
+    # We will find the root of the mean square distance in the group
+    long_bar <- mean(long_vec)
+    lat_bar <- mean(lat_vec)
+    
+    # Get a vector with the average long/lat at each yi
+    temp_long <- cumsum(long_vec)[-n]
+    temp_lat <- cumsum(lat_vec)[-n]
+    # Find the average long/lat in both the left/right halves
+    # Side note: we'll reuse left.wt and right.wt
+    lmean_long <- temp_long / left.wt
+    lmean_lat <- temp_lat / left.wt
+    
+    temp_long <- rev(cumsum(rev(long_vec[-n])))
+    temp_lat <- rev(cumsum(rev(lat_vec[-n])))
+    rmean_long <- temp_long / right.wt
+    rmean_lat <- temp_lat / right.wt
+    
+    # TODO: Remove this
+    # print("--------")
+    # print(paste("lmean_long: ", lmean_long, sep=''))
+    # print(paste("lmean_lat: ", lmean_lat, sep=''))
+    # print(paste("rmean_long: ", rmean_long, sep=''))
+    # print(paste("rmean_lat: ", rmean_lat, sep=''))
+    
+    # Get both ss and ssb
+    ssb <- (left.wt*distance(long_bar, lat_bar, lmean_long, lmean_lat)^2) + (right.wt*distance(long_bar, lat_bar, rmean_long, rmean_lat)^2)
+    ss <- sum(distance(long_bar, lat_bar, long_vec, lat_vec)^2)
+    
+    # TODO: Remove this output
+    # print("goodness: ")
+    # print(head(goodness))
+    # print("ssb/ss: ")
+    # print(ssb/ss)
     
     # Add on to goodness and then return
-    goodness <- (1-lambda)*p1 + lambda*p2
+    goodness <- ssb/ss
+    # goodness = (1-lambda) * goodness + lambda * (ssb/ss)
+    #goodness <- lambda * distance(lmean_long, lmean_lat, rmean_long, rmean_lat)
+    #goodness <- goodness / distance(-114, 41.59, -109.02, 37)
     
     list(goodness = goodness, direction = sign(lmean))
   }

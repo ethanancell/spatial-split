@@ -4,31 +4,27 @@ library(randomForest)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(sf)
+library(SpatialML)
 library(tidyverse)
 
 # ------------
 # --- DATA ---
 # ------------
 
-example_soil <- read.csv("data/test_output.csv")
+example_soil <- read.csv("data/train.csv")
 
 # What will we include in the model?
-predictors <- predictors <- c(elev = "Elevation.meter.", 
-                              wind = "Wind.Speed.m.s.",
-                              p1day = "Precipitation.for.1.day", 
-                              p2day = "Precipitation.for.2.days",
-                              p3day = "Precipitation.for.3.days", 
-                              p4day = "Precipitation.for.4.days",
-                              p5day = "Precipitation.for.5.days", 
-                              slope = "slope_vec",
-                              aspect = "aspect_vec", 
-                              long = "Longitude",
-                              lat = "Latitude")
+predictors <- c("sm_8", "elev", "long", "lat", "wind_speed", "p1day", "p2day",
+                "p3day", "p4day", "p5day", "slope", "aspect",
+                "avg_month_rain", "avg_month_temp")
 
 # Rename columns and remove observations with nothing at sm_8
 example_soil <- example_soil %>%
   select(sm_8, all_of(predictors)) %>%
   filter(sm_8 >= 0)
+
+locations <- example_soil %>%
+  select(long, lat)
 
 
 # -------------
@@ -44,6 +40,14 @@ prediction <- predict(example_rf)
 example_soil <- cbind(example_soil, prediction)
 example_soil <- example_soil %>%
   mutate(resid = sm_8 - prediction)
+
+# Global random forest
+global_rf <- grf(sm_8 ~ avg_month_rain + slope + aspect + elev + 
+                   avg_month_temp + p1day + p2day + p3day,
+                 example_soil,
+                 bw = 20,
+                 kernel = "adaptive",
+                 coords = locations)
 
 # ----------------
 # --- ANALYSIS ---
