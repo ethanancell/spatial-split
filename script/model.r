@@ -22,6 +22,10 @@ model_spatial_split <- function(response, predictors, data, subregions, default_
   }
   model <- prune(model, cp = cptable[cptable[,2] == subregions - 1, 1])
   
+  rpart.plot(model)
+  stop()
+  browser()
+  
   # Return a dataframe with both the raw predictions, as well as the factors of the classes
   prediction <- predict(model)
   soil_class <- as.factor(prediction)
@@ -33,6 +37,19 @@ model_spatial_split <- function(response, predictors, data, subregions, default_
   resid <- resid - prediction
   
   data.frame(prediction, resid, soil_class)
+}
+
+
+# SPODT oblique spatial partitioning
+model_spodt <- function(response, data) {
+  require(SPODT)
+  require(sp)
+  
+  # Project into appropriate CRS
+  coordinates(data) <- ~long+lat
+  proj4string(data) <- crs("+proj=utm +zone=12 +units=m")
+  
+  clusters <- spodt(sm_8 ~ 1, data = data)
 }
 
 
