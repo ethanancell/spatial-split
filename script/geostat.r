@@ -25,7 +25,7 @@ soil.df <- spTransform(soil.df, CRS("+proj=utm +zone=12 +units=m"))
 soil.raster <- as(raster(soil.df, res=1000), "SpatialPixelsDataFrame")
 
 # idw
-soil.idw <- idw(sm_8 ~ elev, soil.df, soil.raster)
+soil.idw <- idw(sm_8~1, soil.df, soil.raster)
 
 # Cross-validate
 
