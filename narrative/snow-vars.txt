@@ -1,0 +1,7 @@
+MCMT - mean coldest month temperature (C)
+MWMT - mean warmest month temperature (C)
+TD - temperature difference between MWMT and MCMT (C)
+FFP - frost free period (days)
+PPTWT - winter precipitation (mm)
+RH - mean annual relative humidity (%)
+MAT - mean annual temperature (C)

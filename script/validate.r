@@ -83,3 +83,10 @@ for (k in 1:10) {
 
 rmae(pred, soil$sm_8)
 rmse(pred, soil$sm_8)
+
+
+# ----------------------------------------------
+# --- IDW with clusters from regression tree ---
+# ----------------------------------------------
+
+

@@ -36,7 +36,7 @@ plot_measurements <- function(plot_var, data) {
 plot_soil_classes <- function(data) {
   utah <- plot_utah()
   
-  utah + 
+  utah +
     geom_point(data = data, aes(x = long, y = lat, color = soil_class), size = 2, shape = 16) +
     xlab("Longitude") + ylab("Latitude") +
     ggtitle("Soil classes")
